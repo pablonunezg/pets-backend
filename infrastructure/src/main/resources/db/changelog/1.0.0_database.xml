@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="1" author="pnunez">
+        <comment>Enable pgcrypto extension for UUID generation and cryptography support</comment>
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+        </sql>
+    </changeSet>
+
+    <changeSet id="2" author="pnunez">
+        <comment>Create app_user table (using app_user to avoid Postgres reserved word 'user')</comment>
+        <createTable tableName="app_user">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="pnunez">
+        <comment>Insert initial administrator user</comment>
+        <insert tableName="app_user">
+            <column name="id" value="019cb626-2384-7ca8-a809-c4d7fa824924"/>
+            <column name="username" value="admin"/>
+            <column name="password" value="$2a$10$e9U5nLWT0BUrbWkhbwsbJOjsXgvReVxTKbANOgzVzpGYJ1HDFvqyi"/>
+            <column name="role" value="ADMIN"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="4" author="pnunez">
+        <comment>Create refuge table to store shelter information</comment>
+        <createTable tableName="refuge">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="pnunez">
+        <comment>Seed master data: Default refuge</comment>
+        <insert tableName="refuge">
+            <column name="id" value="019cb687-e294-7d79-be0e-f8d8c6b8f59e"/>
+            <column name="name" value="Independiente"/>
+            <column name="description" value="-"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="6" author="pnunez">
+        <comment>Create pet table with detailed fields for adoption search</comment>
+        <createTable tableName="pet">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="picture" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="breed" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="age_group" type="VARCHAR(20)" remarks="Puppy, Young, Adult, Senior">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size" type="VARCHAR(20)" remarks="Small, Medium, Large, Extra Large">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gender" type="VARCHAR(10)" remarks="Male or Female">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_neutered" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="good_with_dogs" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="good_with_cats" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="good_with_kids" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="energy_level" type="VARCHAR(20)" remarks="Low, Moderate, High">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refuge_id" type="UUID" remarks="Foreign key referencing the refuge table">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID" remarks="Foreign key referencing the user table">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7" author="pnunez">
+        <comment>Define foreign key constraint for referential integrity between pet and refuge</comment>
+        <addForeignKeyConstraint
+                baseTableName="pet"
+                baseColumnNames="refuge_id"
+                constraintName="fk_pet_refuge"
+                referencedTableName="refuge"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+                onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="8" author="pnunez">
+        <comment>Define foreign key constraint for referential integrity between pet and app_user</comment>
+        <addForeignKeyConstraint
+                baseTableName="pet"
+                baseColumnNames="user_id"
+                constraintName="fk_pet_user"
+                referencedTableName="app_user"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+                onUpdate="RESTRICT"/>
+    </changeSet>
+
+</databaseChangeLog>
