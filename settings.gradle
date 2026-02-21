@@ -1,0 +1,8 @@
+rootProject.name = 'pets'
+
+include 'pet-services'
+include 'api'
+include 'domain'
+include 'application'
+include 'infrastructure'
+
